@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->integer('total_pendapatan');
             $table->integer('pengeluaran');
+            $table->bigInteger('daftar_laporan');
             $table->timestamps();
         });
     }

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('laporan__pemesanan__histories', function (Blueprint $table) {
             $table->id();
             $table->foreignId('pesanan_id');
+            $table->bigInteger('daftar_laporan');
             $table->timestamps();
         });
     }

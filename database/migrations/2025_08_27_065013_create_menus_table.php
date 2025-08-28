@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('menus', function (Blueprint $table) {
             $table->id();
             $table->string('nama_hidangan');
+            $table->integer('stok');
             $table->foreignId('kategori_id');
             $table->timestamps();
         });
