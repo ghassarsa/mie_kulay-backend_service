@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('laporan__pemesanans', function (Blueprint $table) {
             $table->id();
             $table->string('pesanan_id');
+            $table->foreign('pesanan_id')->references('id')->on('pesanans')->onDelete('cascade');
             $table->timestamps();
         });
     }

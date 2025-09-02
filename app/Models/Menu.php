@@ -6,21 +6,22 @@ use Illuminate\Database\Eloquent\Model;
 
 class Menu extends Model
 {
-    protected $table = 'menu';
+    protected $table = 'menus';
 
     protected $fillable = [
-        'id',
         'nama_hidangan',
+        'harga_pokok',
+        'harga_jual',
+        'stok',
         'kategori_id',
     ];
 
-    public function Pesanan_Detail()
+    public function pesanan_Detail()
     {
         return $this->hasOne(Pesanan_Detail::class, 'menu_id', 'id');
     }
 
-    public function Category()
-    {
-        return $this->hasOne(Category::class, 'id', 'kategori_id');
+    public function kategori() {
+        return $this->belongsTo(Kategori::class, 'kategori_id', 'id');
     }
 }

@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Pesanan_Detail extends Model
 {
-    protected $table = 'pesanan_detail';
+    protected $table = 'pesanan__details';
+    public $incrementing = false;
+    protected $keyType = 'string';
 
     protected $fillable = [
         'id',
@@ -16,14 +18,14 @@ class Pesanan_Detail extends Model
         'jumlah',
         'harga_satuan',
         'subtotal',
+        'status',
     ];
 
-    public function Pesanan()
+    public function pesanan()
     {
-        return $this->hasMany(Pesanan::class);
+        return $this->belongsTo(Pesanan::class, 'pesanan_id', 'id');
     }
-    public function Menu()
-    {
-        return $this->belongsTo(Menu::class);
+    public function menu() {
+        return $this->belongsTo(Menu::class, 'menu_id', 'id');
     }
 }

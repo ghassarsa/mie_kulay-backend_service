@@ -17,8 +17,7 @@ return new class extends Migration
             $table->integer('hasil_keuntungan');
             $table->integer('total_pengeluaran');
             $table->integer('order_average');
-            $table->integer('hidangan_average');
-            $table->integer('topping_average');
+            $table->unsignedBigInteger('daftar_laporan');
             $table->timestamps();
         });
     }

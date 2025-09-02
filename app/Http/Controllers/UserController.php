@@ -4,30 +4,34 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use illuminate\support\Facades\Auth;
-use illuminate\support\Facades\Hash;
+use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use Illuminate\Support\Facades\Redis;
 
 class UserController extends Controller
 {
     public function register(Request $request)
     {
         $request->validate([
-            'nama' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6|confirmed',
-            'role' => 'required|in:owner,staff',
+            'password' => 'required|string|min:6',
+            'role' => 'required|string',
         ]);
 
-        $user = User::vreate([
+        $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $request->role,
         ]);
 
+        $token = $user->createToken('auth-token')->plainTextToken;
+
         return response()->json([
             'message' => 'User registered successfully',
             'user' => $user,
+            'token' => $token
         ]);
     }
 
@@ -46,13 +50,24 @@ class UserController extends Controller
 
         $user = Auth::user();
 
+        $token = $user->createToken('auth-token')->plainTextToken;
+
         return response()->json([
-            'message' => 'login successfull',
+            'message' => 'login successful',
             'user' => [
                 'name' => $user->name,
                 'email' => $user->email,
                 'role' => $user->role,
+                'token' => $token
             ],
+        ]);
+    }
+
+    public function logout(Request $request) {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json([
+            'message' => 'Logout successful'
         ]);
     }
 }

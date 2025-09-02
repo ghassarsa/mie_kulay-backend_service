@@ -13,8 +13,10 @@ return new class extends Migration
     {
         Schema::create('laporan__pemesanan__histories', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('pesanan_id');
-            $table->bigInteger('daftar_laporan');
+            $table->string('pesanan_id');
+            $table->foreign('pesanan_id')->references('id')->on('pesanans')->onDelete('cascade');
+            $table->unsignedBigInteger('daftar_laporan');
+            $table->enum('status', ['sudah', 'belum']);
             $table->timestamps();
         });
     }

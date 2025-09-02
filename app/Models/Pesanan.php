@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Pesanan extends Model
 {
-    protected $table = 'pesanan';
+    protected $table = 'pesanans';
+    public $incrementing = false;
 
     protected $fillable = [
         'id',

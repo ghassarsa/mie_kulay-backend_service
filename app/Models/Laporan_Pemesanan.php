@@ -6,5 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Laporan_Pemesanan extends Model
 {
-    //
+    protected $fillable = [
+        'pesanan_id',
+    ];
 }
