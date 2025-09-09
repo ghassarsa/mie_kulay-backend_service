@@ -1,89 +1,129 @@
 <?php
 
+use Illuminate\Support\Facades\Artisan;
+use App\Models\Pesanan_Detail;
 use App\Models\Analisis_Keuangan;
 use App\Models\Analisis_Makanan;
-use App\Models\Laporan_Pemesanan;
-use App\Models\Laporan_Pemesanan_History;
-use App\Models\Pesanan_Detail;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schedule;
-use Illuminate\Support\Facades\Log;
+use App\Models\Menu;
+use Illuminate\Support\Carbon;
 
-Artisan::command('laporan:move-to-history', function () {
+Artisan::command('laporan:to-analisis-month', function () {
+    $details = Pesanan_Detail::where('status', 'belum')->get();
 
-    // Ambil nomor batch terakhir, jika belum ada maka mulai dari 1
-    $batchId = Laporan_Pemesanan_History::max('daftar_laporan');
-    $batchId = $batchId ? $batchId + 1 : 1;
-
-    // Pindahkan laporan pemesanan ke history
-    Laporan_Pemesanan::chunk(100, function ($laporans) use ($batchId) {
-        foreach ($laporans as $item) {
-            Laporan_Pemesanan_History::create([
-                'pesanan_id'     => $item->pesanan_id,
-                'daftar_laporan' => $batchId,
-                'status'         => 'belum',
-            ]);
-            $item->delete();
-        }
-    });
-
-    // Ambil semua pesanan_id dari batch ini
-    $pesananIds = Laporan_Pemesanan_History::where('daftar_laporan', $batchId)
-        ->pluck('pesanan_id')
-        ->toArray();
-
-    if (count($pesananIds) === 0) {
-        $this->info('Tidak ada pesanan pada batch ini untuk dianalisis.');
+    if ($details->isEmpty()) {
+        $this->info("Tidak ada data pesanan yang belum dianalisis.");
         return;
     }
 
-    Log::info('Pesanan IDs for batch ' . $batchId, $pesananIds);
+    $lastKeuangan = Analisis_Keuangan::max('daftar_laporan') ?? 0;
+    $lastMakanan  = Analisis_Makanan::max('daftar_laporan') ?? 0;
+    $daftar_laporan = max($lastKeuangan, $lastMakanan) + 1;
 
-    // Hitung total pendapatan & order average
-    $totalPendapatan = Pesanan_Detail::whereIn('pesanan_id', $pesananIds)
-        ->sum('subtotal');
+    $hasil_pendapatan = $details->sum('subtotal');
+    $total_harga_pokok = $details->sum(function ($detail) {
+        $menu = Menu::find($detail->menu_id);
+        return $menu ? ($menu->harga_pokok * $detail->jumlah) : 0;
+    });
+    $hasil_keuntungan = $hasil_pendapatan - $total_harga_pokok;
+    $total_order = $details->count();
+    $order_average = $total_order > 0 ? intval($hasil_pendapatan / $total_order) : 0;
 
-    $totalOrder = count($pesananIds);
-    $orderAverage = $totalOrder > 0 ? $totalPendapatan / $totalOrder : 0;
-
-    // Hitung pengeluaran & keuntungan
-    $pengeluaran = Pesanan_Detail::whereIn('pesanan_id', $pesananIds)
-        ->join('menus', 'pesanan__details.menu_id', '=', 'menus.id')
-        ->selectRaw('SUM(menus.harga_pokok * pesanan__details.jumlah) as total')
-        ->value('total') ?? 0;
-
-    $keuntungan = $totalPendapatan - $pengeluaran;
-
-    // Simpan ke Analisis_Keuangan
     Analisis_Keuangan::create([
-        'hasil_pendapatan'  => $totalPendapatan,
-        'hasil_keuntungan'  => $keuntungan,
-        'total_pengeluaran' => $pengeluaran,
-        'order_average'     => $orderAverage,
-        'daftar_laporan'    => $batchId
+        'hasil_pendapatan'  => $hasil_pendapatan,
+        'hasil_keuntungan'  => $hasil_keuntungan,
+        'total_pengeluaran' => $total_harga_pokok,
+        'order_average'     => $order_average,
+        'periode_bulanan'   => Carbon::now()->startOfMonth(),
+        'daftar_laporan'    => $daftar_laporan,
     ]);
 
-    Pesanan_Detail::whereIn('pesanan_id', $pesananIds)->where('status', 'belum')->get()
-      ->each(function ($detail) use ($batchId, $totalOrder) {
+    $grouped = $details->groupBy('menu_id');
+    foreach ($grouped as $menu_id => $items) {
+        $menu = Menu::find($menu_id);
+        if (!$menu) continue;
 
-        $analisis = Analisis_Makanan::firstOrNew([
-            'daftar_laporan' => $batchId,
-            'menu_id'        => $detail->menu_id,
-            'kategori_id'    => $detail->menu->kategori_id,
+        $total_jumlah = $items->sum('jumlah');
+        $average_hidangan = $items->count() > 0 ? $total_jumlah / $items->count() : 0;
+
+        Analisis_Makanan::create([
+            'daftar_laporan'   => $daftar_laporan,
+            'nama_hidangan'    => $menu->nama_hidangan,
+            'total_jumlah'     => $total_jumlah,
+            'average_hidangan' => round($average_hidangan, 2),
+            'periode_bulanan'   => Carbon::now()->startOfMonth(),
         ]);
+    }
 
-        $analisis->total_jumlah = ($analisis->total_jumlah ?? 0) + $detail->jumlah;
-        $analisis->average_per_pesanan = $analisis->total_jumlah / $totalOrder;
-        $analisis->save();
+    $details->each(fn($item) => $item->update(['status' => 'sudah']));
 
-        $detail->update(['status' => 'sudah']);
-    });
-
-    Laporan_Pemesanan_History::where('daftar_laporan', $batchId)
-        ->update(['status' => 'sudah']);
-
-    $this->info('Semua laporan berhasil dipindahkan ke history dengan batch ID: ' . $batchId);
+    $this->info("Analisis bulanan berhasil disimpan dengan daftar_laporan = $daftar_laporan.");
 });
 
-Schedule::command('laporan:move-to-history')->everyMinute();
+Artisan::command('laporan:to-analisis-year', function () {
+    $tahun_lalu = now()->subYear()->year;
+    $periode_tahunan = Carbon::create($tahun_lalu)->startOfYear();
+    $lastReport = max(Analisis_Keuangan::max('daftar_laporan'), Analisis_Makanan::max('daftar_laporan'), 0) + 1;
+
+    $keuanganBulanan = Analisis_Keuangan::whereYear('periode_bulanan', $tahun_lalu)
+        ->whereNull('periode_tahunan')
+        ->get();
+
+    if ($keuanganBulanan->isEmpty()) {
+        $this->info("Tidak ada data bulanan tahun $tahun_lalu untuk Analisis Keuangan.");
+    } else {
+        $totalPendapatan = $keuanganBulanan->sum('hasil_pendapatan');
+        $totalPengeluaran = $keuanganBulanan->sum('total_pengeluaran');
+        $totalKeuntungan = $keuanganBulanan->sum('hasil_keuntungan');
+        $orderAverage = $keuanganBulanan->avg('order_average');
+
+        Analisis_Keuangan::create([
+            'hasil_pendapatan'  => $totalPendapatan,
+            'total_pengeluaran' => $totalPengeluaran,
+            'hasil_keuntungan'  => $totalKeuntungan,
+            'order_average'     => round($orderAverage),
+            'daftar_laporan'    => $lastReport,
+            'periode_bulanan'   => null,
+            'periode_tahunan'   => $periode_tahunan,
+        ]);
+
+        foreach ($keuanganBulanan as $item) {
+            $item->update(['periode_tahunan' => $periode_tahunan]);
+        }
+
+        $this->info("Analisis Keuangan tahunan untuk $tahun_lalu berhasil dibuat.");
+    }
+
+    $makananBulanan = Analisis_Makanan::whereYear('periode_bulanan', $tahun_lalu)
+        ->whereNull('periode_tahunan')
+        ->get();
+
+    if ($makananBulanan->isEmpty()) {
+        $this->info("Tidak ada data bulanan tahun $tahun_lalu untuk Analisis Makanan.");
+    } else {
+        $grouped = $makananBulanan->groupBy('nama_hidangan');
+
+        foreach ($grouped as $namaHidangan => $items) {
+            $totalJumlah = $items->sum('total_jumlah');
+            $totalOrders = $items->sum(function ($item) {
+                return $item->total_jumlah / $item->average_hidangan;
+            });
+            $averageHidangan = $totalOrders > 0 ? $totalJumlah / $totalOrders : 0;
+
+            Analisis_Makanan::create([
+                'daftar_laporan'   => $lastReport,
+                'nama_hidangan'    => $namaHidangan,
+                'total_jumlah'     => $totalJumlah,
+                'average_hidangan' => round($averageHidangan, 2),
+                'periode_bulanan'  => null,
+                'periode_tahunan'  => $periode_tahunan,
+            ]);
+        }
+
+        // Tandai baris bulanan sebagai sudah diproses ke tahunan
+        foreach ($makananBulanan as $item) {
+            $item->update(['periode_tahunan' => $periode_tahunan]);
+        }
+
+        $this->info("Analisis Makanan tahunan untuk $tahun_lalu berhasil dibuat.");
+    }
+});

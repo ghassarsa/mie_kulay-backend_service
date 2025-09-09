@@ -10,6 +10,7 @@ class Menu extends Model
 
     protected $fillable = [
         'nama_hidangan',
+        'gambar',
         'harga_pokok',
         'harga_jual',
         'stok',
@@ -21,7 +22,8 @@ class Menu extends Model
         return $this->hasOne(Pesanan_Detail::class, 'menu_id', 'id');
     }
 
-    public function kategori() {
+    public function kategori()
+    {
         return $this->belongsTo(Kategori::class, 'kategori_id', 'id');
     }
 }

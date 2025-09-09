@@ -14,13 +14,11 @@ return new class extends Migration
         Schema::create('analisis_makanans', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('daftar_laporan');
-            $table->unsignedBigInteger('menu_id');
-            $table->unsignedBigInteger('kategori_id');
+            $table->string('nama_hidangan');
             $table->integer('total_jumlah');
-            $table->float('average_per_pesanan');
-
-            $table->foreign('menu_id')->references('id')->on('menus')->onDelete('cascade');
-            $table->foreign('kategori_id')->references('id')->on('kategoris')->onDelete('cascade');
+            $table->decimal('average_hidangan', 8, 2);
+            $table->date('periode_bulanan')->nullable();
+            $table->date('periode_tahunan')->nullable();
             $table->timestamps();
         });
     }

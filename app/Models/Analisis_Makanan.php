@@ -10,9 +10,10 @@ class Analisis_Makanan extends Model
 
     protected $fillable = [
         'daftar_laporan',
-        'menu_id',
-        'kategori_id',
+        'nama_hidangan',
         'total_jumlah',
-        'average_per_pesanan',
+        'average_hidangan',
+        'periode_bulanan',
+        'periode_tahunan',
     ];
 }

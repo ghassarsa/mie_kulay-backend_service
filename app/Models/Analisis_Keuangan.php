@@ -13,5 +13,7 @@ class Analisis_Keuangan extends Model
         'total_pengeluaran',
         'order_average',
         'daftar_laporan',
+        'periode_bulanan',
+        'periode_tahunan',
     ];
 }

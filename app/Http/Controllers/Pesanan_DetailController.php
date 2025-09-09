@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Aktivitas;
-use App\Models\Laporan_Pemesanan;
 use App\Models\Menu;
 use App\Models\Pesanan;
 use App\Models\Pesanan_Detail;
@@ -59,15 +58,14 @@ class Pesanan_DetailController extends Controller
                 'subtotal' => $subtotal,
             ]);
         }
-        Laporan_Pemesanan::create([
-            'pesanan_id' => $pesanan->id,
-        ]);
 
         $pesanan->update(['total_pesanan' => $total]);
         $name = auth()->user()->name;
         Aktivitas::create([
             'user_id' => auth()->user()->id,
-            'aktivitas' => "{$name} Membuat Pesanan {$pesanan->id}",
+            'action' => "{$name} Membuat Pesanan {$pesanan->id}",
+            'aktivitas' => null,
+            'pesanan_id' => $pesanan->id,
         ]);
 
         return response()->json([
@@ -86,19 +84,31 @@ class Pesanan_DetailController extends Controller
 
     public function update(Request $request, $id)
     {
-        $detail = Pesanan_Detail::findOrFail($id);
-
         $validated = $request->validate([
-            'jumlah' => 'nullable|integer',
-            'harga_satuan' => 'nullable|integer',
+            'details' => 'required|array',
+            'details.*.id' => 'required|exists:pesanan__details,id',
+            'details.*.jumlah' => 'nullable|integer',
+            'details.*.harga_satuan' => 'nullable|integer',
         ]);
+
+        $name = auth()->user()->name;
+        $logText = "";
+
+        foreach ($validated['details'] as $item) {
+            $detail = Pesanan_Detail::findOrFail($item['id']);
+            $detail->update([
+                'jumlah' => $item['jumlah'] ?? $detail->jumlah,
+                'harga_satuan' => $item['harga_satuan'] ?? $detail->harga_satuan,
+            ]);
+
+            $logText .= "- Mengubah Detail {$detail->id} ({$detail->nama_hidangan})\n";
+        }
         $name = auth()->user()->name;
         Aktivitas::create([
             'user_id' => auth()->user()->id,
-            'aktivitas' => "{$name} mengubah Pesanan Detail {$detail->id}",
+            'action' => "{$name} Melakukan pdate pada detail pesanan",
+            'aktivitas' => $logText,
         ]);
-
-        $detail->update($validated);
 
         return response()->json($detail->load(['Pesanan', 'Menu']));
     }

@@ -14,7 +14,10 @@ return new class extends Migration
         Schema::create('aktivitas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id');
-            $table->string('aktivitas');
+            $table->string('pesanan_id')->nullable();
+            $table->foreign('pesanan_id')->references('id')->on('pesanans')->onDelete('cascade');
+            $table->string('action');
+            $table->longText('aktivitas')->nullable();
             $table->timestamps();
         });
     }

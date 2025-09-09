@@ -18,6 +18,8 @@ return new class extends Migration
             $table->integer('total_pengeluaran');
             $table->integer('order_average');
             $table->unsignedBigInteger('daftar_laporan');
+            $table->date('periode_bulanan')->nullable();
+            $table->date('periode_tahunan')->nullable();
             $table->timestamps();
         });
     }

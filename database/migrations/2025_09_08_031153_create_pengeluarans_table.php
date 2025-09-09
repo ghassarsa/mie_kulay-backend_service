@@ -11,12 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('laporan__pemesanan__histories', function (Blueprint $table) {
+        Schema::create('pengeluarans', function (Blueprint $table) {
             $table->id();
-            $table->string('pesanan_id');
-            $table->foreign('pesanan_id')->references('id')->on('pesanans')->onDelete('cascade');
-            $table->unsignedBigInteger('daftar_laporan');
-            $table->enum('status', ['sudah', 'belum']);
+            $table->integer('pengeluaran');
             $table->timestamps();
         });
     }
@@ -26,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('laporan__pemesanan__histories');
+        Schema::dropIfExists('pengeluarans');
     }
 };

@@ -18,14 +18,22 @@ class MenuController extends Controller
     {
         $validated = $request->validate([
             'nama_hidangan' => 'required|string|max:255',
+            'gambar' => 'required|image|mimes:jpeg,png,jpg,gif,webp',
             'harga_pokok' => 'required|integer',
             'harga_jual' => 'required|integer',
             'stok' => 'required|integer',
             'kategori_id' => 'required|exists:kategoris,id',
         ]);
+
+        if ($request->hasFile('gambar')) {
+            $path = $request->file('gambar')->store('menu', 'public');
+            $validated['gambar'] = $path;
+        }
+
         Aktivitas::create([
             'user_id' => auth()->user()->id,
-            'aktivitas' => "Owner menambahkan Menu {$validated['nama_hidangan']}",
+            'action' => "Owner menambahkan Menu {$validated['nama_hidangan']}",
+            'aktivitas' => null,
         ]);
 
         $menu = Menu::create($validated);
@@ -69,9 +77,10 @@ class MenuController extends Controller
         $menu->delete();
         Aktivitas::create([
             'user_id' => auth()->user()->id,
-            'aktivitas' => "Owner menghapus Menu {$menu->nama_hidangan}",
+            'action' => "Owner menghapus Menu {$menu->nama_hidangan}",
+            'aktivitas' => null,
         ]);
-        
+
         return response()->json([
             'message' => 'Menu berhasil dihapus'
         ]);

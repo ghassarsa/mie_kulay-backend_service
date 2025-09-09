@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
-        
+
         Kategori::insert([
             ['jenis_hidangan' => 'makanan'],
             ['jenis_hidangan' => 'minuman'],

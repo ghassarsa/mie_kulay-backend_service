@@ -25,7 +25,25 @@ class PesananController extends Controller
             'pembayaran' => 'nullable|string',
         ]);
 
+        $old = $pesanan->only(['total_pesanan', 'pembayaran']);
+
         $pesanan->update($validated);
+
+        $user = auth()->user()->name;
+        $changes = [];
+        if (array_key_exists('total_pesanan', $validated) && $old['total_pesanan'] != $pesanan->total_pesanan) {
+            $changes[] = "total pesanan menjadi {$pesanan->total_pesanan}";
+        }
+        if (array_key_exists('pembayaran', $validated) && $old['pembayaran'] != $pesanan->pembayaran) {
+            $changes[] = "pembayaran menjadi {$pesanan->pembayaran}";
+        }
+
+        if (!empty($changes)) {
+            Aktivitas::create([
+                'user_id' => auth()->user()->id,
+                'action' => "{$user} mengubah " . implode(' dan ', $changes),
+            ]);
+        }
 
         return response()->json(($pesanan));
     }
