@@ -9,31 +9,34 @@ use illuminate\support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
+    public function users()
+    {
+        $user = User::all();
+        return response()->json($user);
+    }
+
+    public function user(Request $request)
+    {
+        return response()->json($request->user());
+    }
+
+
     public function register(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif,svg',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
-            'role' => 'required|string',
         ]);
-
-        $avatarPath = null;
-        if ($request->hasFile('avatar')) {
-            // Simpan file di storage/app/public/foto
-            $avatarPath = $request->file('avatar')->store('foto', 'public');
-        }
 
         $user = User::create([
             'name' => $request->name,
-            'avatar' => $avatarPath,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $request->role,
         ]);
 
         $token = $user->createToken('auth-token')->plainTextToken;
@@ -75,29 +78,38 @@ class UserController extends Controller
 
     public function updateProfile(Request $request)
     {
-        $request->validate([
-            'avatar' => 'required!image|mimes:jpeg,png,jpg,gif,svg',
-            'current_password' => 'required|string',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
+        $rules = [
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'password' => 'nullable|string|min:8|confirmed',
+            'current_password' => 'required_with:password|string',
+        ];
+        $validated = $request->validate($rules);
 
+        $user = $request->user();
         if ($request->hasFile('avatar')) {
-            $path = $request->file('avatar')->store('foto', 'public');
-            $request['avatar'] = $path;
+            if ($user->avatar) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+            $validated['avatar'] = $request->file('avatar')->store('foto', 'public');
         }
 
-        if (!Hash::check($request->current_password, auth()->user()->password)) {
-            return response()->json([
-                'message' => 'Password saat ini tidak valid',
-            ], 401);
+        // Update password (kalau ada)
+        if ($request->filled('password')) {
+            if (!Hash::check($request->current_password, $request->user()->password)) {
+                return response()->json([
+                    'message' => 'Password saat ini tidak valid',
+                ], 401);
+            }
+            $validated['password'] = Hash::make($request->password);
         }
 
-        auth()->user()->update([
-            'password' => Hash::make($request->password),
-        ]);
+        // Update ke database
+        $user = $request->user();
+        $user->update($validated);
 
         return response()->json([
             'message' => 'Profile updated successfully',
+            'user' => $user,
         ]);
     }
 
@@ -113,7 +125,8 @@ class UserController extends Controller
     public function pengeluaran(Request $request)
     {
         $validate = $request->validate([
-            'pengeluaran' => 'required|integer'
+            'pengeluaran' => 'required|integer',
+            'catatan'     => 'required|string'
         ]);
 
         Pengeluaran::create([$validate]);
