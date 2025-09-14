@@ -6,11 +6,18 @@ use Illuminate\Database\Eloquent\Model;
 
 class Kategori extends Model
 {
-    protected $table = 'kategoris'; // ✅ kasih tahu nama tabel manual
+    protected $table = 'kategoris';
 
     protected $fillable = [
         'jenis_hidangan'
     ];
+
+    public $timestamps = false;
+
+    public function bahan()
+    {
+        return $this->hasMany(bahan_mentah::class, 'kategori_id');
+    }
 
     public function menus()
     {

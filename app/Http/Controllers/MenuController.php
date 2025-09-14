@@ -17,12 +17,15 @@ class MenuController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nama_hidangan' => 'required|string|max:255',
+            'nama_hidangan' => 'required|string|max:255|unique:menus,nama_hidangan',
             'gambar' => 'required|image|mimes:jpeg,png,jpg,gif,webp',
-            'harga_pokok' => 'required|integer',
             'harga_jual' => 'required|integer',
-            'stok' => 'required|integer',
             'kategori_id' => 'required|exists:kategoris,id',
+            'bahan_ids' => 'required|array',
+            'bahan_ids.*.bahan_id' => 'required|exists:bahan_mentahs,id',
+            'bahan_ids.*.jumlah' => 'required|integer|min:1',
+        ], [
+            'nama_hidangan.unique' => 'Nama hidangan sudah ada, silakan gunakan nama lain.',
         ]);
 
         if ($request->hasFile('gambar')) {
@@ -37,7 +40,16 @@ class MenuController extends Controller
         ]);
 
         $menu = Menu::create($validated);
-        return response()->json($menu->load(['kategori']));
+
+        $bahanData = collect($validated['bahan_ids'])->mapWithKeys(function ($bahan) {
+            // contoh hasil : $bahan = ['bahan_id' => 3, 'jumlah' => 2]
+            return [$bahan['bahan_id'] => ['jumlah' => $bahan['jumlah']]];
+        })->toArray();
+
+        // memcegah duplikat bahan mentah untuk menu yang sama
+        $menu->bahanMentahs()->sync($bahanData);
+
+        return response()->json($menu->load(['kategori', 'bahanMentahs']));
     }
 
     public function show($id)

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('bahan_mentahs', function (Blueprint $table) {
             $table->id();
             $table->string('nama_bahan');
+            $table->integer('harga_beli');
             $table->foreignId('kategori_id');
             $table->integer('stok');
             $table->timestamps();

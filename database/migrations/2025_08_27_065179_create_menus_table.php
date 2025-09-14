@@ -13,9 +13,10 @@ return new class extends Migration
     {
         Schema::create('menus', function (Blueprint $table) {
             $table->id();
-            $table->string('nama_bahan');
+            $table->string('nama_hidangan');
+            $table->string('gambar');
+            $table->integer('harga_jual');
             $table->foreignId('kategori_id');
-            $table->string('stok');
             $table->timestamps();
         });
     }

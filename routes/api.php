@@ -22,11 +22,21 @@ Route::controller(UserController::class)->group(function () {
 });
 Route::get('index', [AnalisisController::class, 'index'])->middleware(['auth:sanctum', 'role:owner']);
 
-Route::get('/category', [CategoryController::class, 'index']);
+Route::controller(CategoryController::class)->group(function () {
+    Route::get('/category', 'index');
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/category', 'store');
+        Route::put('/category/{id}', 'update');
+        Route::delete('/category/{id}', 'destroy');
+    });
+});
 
 Route::controller(BahanController::class)->group(function () {
+    Route::get('/bahan', 'index');
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/tambah/bahan', 'store');
+        Route::put('/edit/bahan/{id}', 'update');
+        Route::delete('/hapus/bahan/{id}', 'destroy');
     });
 });
 

@@ -8,6 +8,7 @@ class bahan_mentah extends Model
 {
     protected $fillable = [
         'nama_bahan',
+        'harga_beli',
         'kategori_id',
         'stok',
     ];
@@ -20,5 +21,12 @@ class bahan_mentah extends Model
     public function kategori()
     {
         return $this->belongsTo(Kategori::class, 'kategori_id');
+    }
+
+    public function menus()
+    {
+        return $this->belongsToMany(Menu::class, 'bahan_mentah_menus')
+            ->withPivot('jumlah')
+            ->withTimestamps();
     }
 }

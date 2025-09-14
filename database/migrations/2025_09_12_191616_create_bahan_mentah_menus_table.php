@@ -13,8 +13,9 @@ return new class extends Migration
     {
         Schema::create('bahan_mentah_menus', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('bahan_mentah_id');
-            $table->foreignId('menu_id');
+            $table->foreignId('bahan_mentah_id')->constrained('bahan_mentahs')->onDelete('cascade');
+            $table->foreignId('menu_id')->constrained('menus')->onDelete('cascade');
+            $table->integer('jumlah')->default(1);
             $table->timestamps();
         });
     }

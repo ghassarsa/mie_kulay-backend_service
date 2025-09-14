@@ -26,4 +26,11 @@ class Menu extends Model
     {
         return $this->belongsTo(Kategori::class, 'kategori_id', 'id');
     }
+
+    public function bahanMentahs()
+    {
+        return $this->belongsToMany(bahan_mentah::class, 'bahan_mentah_menus')
+            ->withPivot('jumlah')
+            ->withTimestamps();
+    }
 }
