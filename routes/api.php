@@ -4,10 +4,10 @@ use App\Http\Controllers\AnalisisController;
 use App\Http\Controllers\BahanController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\MenuController;
+use App\Http\Controllers\PengeluaranController;
 use App\Http\Controllers\Pesanan_DetailController;
 use App\Http\Controllers\PesananController;
 use App\Http\Controllers\UserController;
-use App\Models\Menu;
 use Illuminate\Support\Facades\Route;
 
 Route::controller(UserController::class)->group(function () {
@@ -20,7 +20,16 @@ Route::controller(UserController::class)->group(function () {
         Route::put('/updateProfile', 'updateProfile');
     });
 });
+Route::controller(PengeluaranController::class)->group(function () {
+    Route::get('/pengeluaran', 'index');
+    Route::post('/pengeluaran', 'store');
+});
+
 Route::get('index', [AnalisisController::class, 'index'])->middleware(['auth:sanctum', 'role:owner']);
+Route::get('monthly-income', [AnalisisController::class, 'monthlyIncome']);
+Route::get('monthly-expenses', [AnalisisController::class, 'monthlyExpenses']);
+Route::get('monthly-orders', [AnalisisController::class, 'monthlyOrders']);
+Route::get('favorite-menu', [AnalisisController::class, 'favoriteMenu']);
 
 Route::controller(CategoryController::class)->group(function () {
     Route::get('/category', 'index');
@@ -60,7 +69,6 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::controller(PesananController::class)->group(function () {
         Route::get('/pesanan', 'index');
-        Route::post('/pesanan', 'store');
         Route::get('/pesanan/{id}', 'show');
         Route::put('/pesanan/{id}', 'update');
         Route::delete('/pesanan/{id}', 'destroy');

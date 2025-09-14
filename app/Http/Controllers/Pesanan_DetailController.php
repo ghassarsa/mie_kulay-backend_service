@@ -24,12 +24,30 @@ class Pesanan_DetailController extends Controller
         if (!isset($data['pesanan']) || !is_array($data['pesanan'])) {
             return response()->json(['message' => 'Data pesanan tidak valid'], 422);
         }
+
         $pesananItems = $data['pesanan'];
         $rules = [
             '*.menu_id' => 'required|exists:menus,id',
-            '*.jumlah' => 'required|integer',
+            '*.jumlah' => 'required|integer|min:1',
         ];
         $validatedData = validator($pesananItems, $rules)->validate();
+
+        $menus = Menu::whereIn('id', collect($validatedData)->pluck('menu_id'))
+            ->with('bahanMentahs')
+            ->get()
+            ->keyBy('id');
+
+        foreach ($validatedData as $item) {
+            $menu = $menus[$item['menu_id']];
+            foreach ($menu->bahanMentahs as $bahan) {
+                $required = $bahan->pivot->jumlah * $item['jumlah'];
+                if ($bahan->stok < $required) {
+                    return response()->json([
+                        'message' => "Stok bahan '{$bahan->nama_bahan}' untuk menu '{$menu->nama_hidangan}' tidak cukup"
+                    ], 422);
+                }
+            }
+        }
 
         $pesanan = Pesanan::create([
             'id' => 'PSN' . mt_rand(1000000000, 9999999999),
@@ -39,11 +57,8 @@ class Pesanan_DetailController extends Controller
 
         $total = 0;
 
-        $menus = Menu::whereIn('id', collect($validatedData)->pluck('menu_id'))->get()->keyBy('id');
-
         foreach ($validatedData as $item) {
             $menu = $menus[$item['menu_id']];
-
             $harga_satuan = $menu->harga_jual;
             $subtotal = $item['jumlah'] * $harga_satuan;
             $total += $subtotal;
@@ -57,13 +72,18 @@ class Pesanan_DetailController extends Controller
                 'harga_satuan' => $harga_satuan,
                 'subtotal' => $subtotal,
             ]);
+
+            foreach ($menu->bahanMentahs as $bahan) {
+                $bahan->stok -= $bahan->pivot->jumlah * $item['jumlah'];
+                $bahan->save();
+            }
         }
 
         $pesanan->update(['total_pesanan' => $total]);
-        $name = auth()->user()->name;
+
         Aktivitas::create([
             'user_id' => auth()->user()->id,
-            'action' => "{$name} Membuat Pesanan {$pesanan->id}",
+            'action' => auth()->user()->name . " Membuat Pesanan {$pesanan->id}",
             'aktivitas' => null,
             'pesanan_id' => $pesanan->id,
         ]);

@@ -12,7 +12,7 @@ class PesananController extends Controller
 {
     public function index()
     {
-        $pesanan = Pesanan::with('Pesanan_Detail')->get();
+        $pesanan = Pesanan::with('pesananDetail')->get();
         return response()->json($pesanan);
     }
 

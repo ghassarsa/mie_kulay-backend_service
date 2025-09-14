@@ -11,11 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pengeluarans', function (Blueprint $table) {
+        Schema::create('favorite__menus', function (Blueprint $table) {
             $table->id();
-            $table->integer('pengeluaran');
-            $table->longText('catatan');
-            $table->enum('status', ['belum', 'sudah'])->default('belum');
+            $table->string('nama_hidangan');
+            $table->string('kategori_hidangan');
+            $table->integer('jumlah');
+            $table->foreignId('analisis_makanan_id')->constrained('analisis_makanans')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -25,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pengeluarans');
+        Schema::dropIfExists('favorite__menus');
     }
 };

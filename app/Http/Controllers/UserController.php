@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Aktivitas;
-use App\Models\Pengeluaran;
 use Illuminate\Http\Request;
 use illuminate\support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -119,27 +118,6 @@ class UserController extends Controller
 
         return response()->json([
             'message' => 'Logout successful'
-        ]);
-    }
-
-    public function pengeluaran(Request $request)
-    {
-        $validate = $request->validate([
-            'pengeluaran' => 'required|integer',
-            'catatan'     => 'required|string'
-        ]);
-
-        Pengeluaran::create([$validate]);
-
-        $name = auth()->user()->name;
-        Aktivitas::create([
-            'user_id' => auth()->user(),
-            'action' => "{$name} Menambahkan pengeluaran sebesar {$validate['pengeluaran']}",
-            'aktivitas' => null,
-        ]);
-
-        return response()->json([
-            'message' => 'Pengeluaran telah ditambahkan'
         ]);
     }
 }

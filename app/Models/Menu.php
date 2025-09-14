@@ -11,7 +11,6 @@ class Menu extends Model
     protected $fillable = [
         'nama_hidangan',
         'gambar',
-        'harga_pokok',
         'harga_jual',
         'stok',
         'kategori_id',
@@ -19,7 +18,7 @@ class Menu extends Model
 
     public function pesanan_Detail()
     {
-        return $this->hasOne(Pesanan_Detail::class, 'menu_id', 'id');
+        return $this->hasMany(Pesanan_Detail::class, 'menu_id', 'id');
     }
 
     public function kategori()
@@ -30,7 +29,6 @@ class Menu extends Model
     public function bahanMentahs()
     {
         return $this->belongsToMany(bahan_mentah::class, 'bahan_mentah_menus')
-            ->withPivot('jumlah')
-            ->withTimestamps();
+            ->withPivot('jumlah');
     }
 }

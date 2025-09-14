@@ -15,7 +15,7 @@ class Pesanan extends Model
         'pembayaran',
     ];
 
-    public function Pesanan_Detail()
+    public function pesananDetail()
     {
         return $this->hasMany(Pesanan_Detail::class, 'pesanan_id');
     }
