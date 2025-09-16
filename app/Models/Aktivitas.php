@@ -12,4 +12,9 @@ class Aktivitas extends Model
         'aktivitas',
         'pesanan_id',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

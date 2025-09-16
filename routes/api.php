@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AktivitasController;
 use App\Http\Controllers\AnalisisController;
 use App\Http\Controllers\BahanController;
 use App\Http\Controllers\CategoryController;
@@ -14,6 +15,7 @@ Route::controller(UserController::class)->group(function () {
     Route::get('/users', 'users');
     Route::post('/register', 'register');
     Route::post('/login', 'login');
+    Route::get('/aktivitas', [AktivitasController::class, 'index'])->middleware(['auth:sanctum']);
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', 'logout');
         Route::get('/user', 'user');
