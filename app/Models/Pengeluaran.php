@@ -10,5 +10,7 @@ class Pengeluaran extends Model
         'pengeluaran',
         'catatan',
         'status',
+        'created_at',
+        'updated_at',
     ];
 }

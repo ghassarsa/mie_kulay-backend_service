@@ -43,7 +43,14 @@ class BahanController extends Controller
         $bahan = bahan_mentah::findOrFail($id);
 
         $data = $request->only(['nama_bahan', 'harga_beli', 'stok', 'kategori_id']);
+
+        $name = auth()->user()->name;
         $bahan->update($data);
+        Aktivitas::create([
+            'user_id' => auth()->user()->id,
+            'action' => "{$name} mengubah Bahan Mentah {$bahan->nama_bahan}",
+            'aktivitas' => null,
+        ]);
 
         return response()->json([
             'message' => 'Bahan berhasil diupdate',

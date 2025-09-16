@@ -18,11 +18,16 @@ Route::controller(UserController::class)->group(function () {
         Route::post('/logout', 'logout');
         Route::get('/user', 'user');
         Route::put('/updateProfile', 'updateProfile');
+        Route::delete('/deleteUser/{id}', 'deleteUser');
     });
 });
 Route::controller(PengeluaranController::class)->group(function () {
-    Route::get('/pengeluaran', 'index');
-    Route::post('/pengeluaran', 'store');
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/pengeluaran', 'index');
+        Route::post('/pengeluaran', 'store');
+        Route::put('/pengeluaran/{id}', 'update');
+        Route::delete('/pengeluaran/{id}', 'destroy');
+    });
 });
 
 Route::get('index', [AnalisisController::class, 'index'])->middleware(['auth:sanctum', 'role:owner']);
