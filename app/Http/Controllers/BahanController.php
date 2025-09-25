@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Aktivitas;
 use App\Models\bahan_mentah;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class BahanController extends Controller
 {
@@ -16,6 +17,10 @@ class BahanController extends Controller
 
     public function store(Request $request)
     {
+        Log::info('=== STORE METHOD STARTED ===');
+        Log::info('User ID: ' . auth()->id());
+        Log::info('Session ID: ' . session()->getId());
+
         $validated = $request->validate([
             'nama_bahan' => 'required|string|max:255|unique:bahan_mentahs,nama_bahan',
             'harga_beli' => 'required|integer',
@@ -23,8 +28,10 @@ class BahanController extends Controller
             'stok' => 'required|integer|min:0',
         ], [
             'nama_bahan.unique' => 'Nama bahan telah terbuat sebelumnya',
-            // custom message
         ]);
+
+        // Log sebelum create
+        Log::info('Creating bahan: ' . $validated['nama_bahan']);
 
         $name = auth()->user()->name;
         Aktivitas::create([
@@ -34,6 +41,11 @@ class BahanController extends Controller
         ]);
 
         $bahan = bahan_mentah::create($validated);
+
+        // Log setelah create
+        Log::info('Bahan created successfully');
+        Log::info('User ID after: ' . auth()->id());
+        Log::info('Session ID after: ' . session()->getId());
 
         return response()->json($bahan->load(['menu', 'kategori']));
     }

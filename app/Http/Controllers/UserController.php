@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use illuminate\support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Storage;
 
@@ -51,59 +52,58 @@ class UserController extends Controller
     {
         $credentials = $request->validate([
             'email' => 'required|email',
-            'password' => 'required|string'
+            'password' => 'required|string',
         ]);
 
-        if (!Auth::attempt($credentials)) {
-            return response()->json([
-                'message' => 'Invalid login credentials',
-            ], 401);
+        $remember = $request->boolean('remember', false);
+
+        if (!Auth::attempt($credentials, $remember)) {
+            return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        $user = Auth::user();
-
-        $token = $user->createToken('auth-token')->plainTextToken;
+        $request->session()->regenerate();
+        $cookie = Cookie::make(
+            '_lsrf-tkmen',
+            $request->email,
+            5 * 365 * 24 * 60,
+            '/',
+            null,
+            false,
+            true
+        );
 
         return response()->json([
-            'message' => 'login successful',
-            'user' => [
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $user->role,
-                'token' => $token
-            ],
-        ]);
+            'message' => 'Login successful',
+            'user' => Auth::user()
+        ])->withCookie($cookie);
     }
+
 
     public function updateProfile(Request $request)
     {
         $rules = [
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'name' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
             'password' => 'nullable|string|min:8|confirmed',
             'current_password' => 'required_with:password|string',
         ];
-        $validated = $request->validate($rules);
 
+        $validated = $request->validate($rules);
         $user = $request->user();
+
         if ($request->hasFile('avatar')) {
-            if ($user->avatar) {
-                Storage::disk('public')->delete($user->avatar);
-            }
+            if ($user->avatar) Storage::disk('public')->delete($user->avatar);
             $validated['avatar'] = $request->file('avatar')->store('foto', 'public');
         }
 
-        // Update password (kalau ada)
         if ($request->filled('password')) {
-            if (!Hash::check($request->current_password, $request->user()->password)) {
-                return response()->json([
-                    'message' => 'Password saat ini tidak valid',
-                ], 401);
+            if (!Hash::check($request->current_password, $user->password)) {
+                return response()->json(['message' => 'Password saat ini tidak valid'], 401);
             }
             $validated['password'] = Hash::make($request->password);
         }
 
-        // Update ke database
-        $user = $request->user();
         $user->update($validated);
 
         return response()->json([
@@ -111,6 +111,9 @@ class UserController extends Controller
             'user' => $user,
         ]);
     }
+
+
+
 
     public function deleteUser($id)
     {
@@ -124,10 +127,10 @@ class UserController extends Controller
 
     public function logout(Request $request)
     {
+        // hapus token saat ini
         $request->user()->currentAccessToken()->delete();
 
-        return response()->json([
-            'message' => 'Logout successful'
-        ]);
+        return response()->json(['message' => 'Logged out successfully'])
+            ->withoutCookie('token'); // hapus cookie
     }
 }
