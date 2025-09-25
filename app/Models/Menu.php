@@ -12,7 +12,6 @@ class Menu extends Model
         'nama_hidangan',
         'gambar',
         'harga_jual',
-        'stok',
         'kategori_id',
     ];
 
@@ -28,7 +27,7 @@ class Menu extends Model
 
     public function bahanMentahs()
     {
-        return $this->belongsToMany(bahan_mentah::class, 'bahan_mentah_menus')
+        return $this->belongsToMany(bahan_mentah::class, 'bahan_mentah_menus', 'menu_id', 'bahan_mentah_id')
             ->withPivot('jumlah');
     }
 }

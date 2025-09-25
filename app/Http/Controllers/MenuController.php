@@ -3,14 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Aktivitas;
+use App\Models\bahan_mentah;
 use App\Models\Menu;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class MenuController extends Controller
 {
     public function index()
     {
-        $menu = Menu::with(['kategori', 'pesanan_detail'])->get();
+        $menu = Menu::with(['kategori', 'pesanan_detail', 'bahanMentahs'])->get();
         return response()->json($menu);
     }
 
@@ -62,25 +65,58 @@ class MenuController extends Controller
     {
         $menu = Menu::findOrFail($id);
 
+        // Validasi hanya jika field ada
         $validated = $request->validate([
             'nama_hidangan' => 'nullable|string|max:255',
-            'harga_pokok' => 'required|integer',
-            'harga_jual' => 'required|integer',
-            'stok' => 'required|integer',
-            'kategori_id' => 'nullable|exists:kategoris,id',
+            'harga_jual'    => 'nullable|integer',
+            'kategori_id'   => 'nullable|exists:kategoris,id',
+            'gambar'        => 'nullable|image',
         ]);
-        $oldName = $menu->nama_hidangan;
+
+        // Handle gambar
+        if ($request->hasFile('gambar')) {
+            // Hapus gambar lama jika ada
+            if ($menu->gambar && Storage::disk('public')->exists($menu->gambar)) {
+                Storage::disk('public')->delete($menu->gambar);
+            }
+
+            $file = $request->file('gambar');
+            $path = $file->store('menu', 'public');
+            $validated['gambar'] = $path;
+        }
+
+        $oldName = $menu->nama_hidangan ?? 'Menu';
         $menu->update($validated);
-        $newName = $menu->nama_hidangan;
+        $newName = $menu->nama_hidangan ?? $oldName;
 
-        $name = $request->input('nama_hidangan');
-        $validated['nama_hidangan'] = $name;
+        // Handle bahan opsional
+        if ($request->has('bahan')) {
+            $bahan = $request->input('bahan');
+
+            if (!isset($bahan['id'])) {
+                $newBahan = bahan_mentah::create([
+                    'nama_bahan'  => $bahan['nama'] ?? 'Bahan baru',
+                    'harga_beli'  => $bahan['harga'] ?? 0,
+                    'kategori_id' => $bahan['kategori_id'] ?? 1,
+                ]);
+                $bahanId = $newBahan->id;
+            } else {
+                $bahanId = $bahan['id'];
+            }
+
+            $menu->bahanMentahs()->syncWithoutDetaching([
+                $bahanId => ['jumlah' => $bahan['jumlah'] ?? 1],
+            ]);
+        }
+
+        // Catat aktivitas
         Aktivitas::create([
-            'user_id' => auth()->user()->id,
+            'user_id'   => auth()->user()->id,
             'aktivitas' => "Owner mengubah Menu {$oldName} menjadi {$newName}",
+            'action'    => 'update',
         ]);
 
-        return response()->json($menu->load(['kategori', 'pesanan_detail']));
+        return response()->json($menu->load(['kategori', 'pesanan_detail', 'bahanMentahs']));
     }
 
     public function destroy($id)

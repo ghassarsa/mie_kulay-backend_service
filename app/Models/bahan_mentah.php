@@ -10,7 +10,6 @@ class bahan_mentah extends Model
         'nama_bahan',
         'harga_beli',
         'kategori_id',
-        'stok',
     ];
 
     public function menu()

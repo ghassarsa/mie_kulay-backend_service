@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Aktivitas;
 use App\Models\bahan_mentah;
+use App\Models\Menu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -17,44 +18,47 @@ class BahanController extends Controller
 
     public function store(Request $request)
     {
-        Log::info('=== STORE METHOD STARTED ===');
-        Log::info('User ID: ' . auth()->id());
-        Log::info('Session ID: ' . session()->getId());
-
         $validated = $request->validate([
             'nama_bahan' => 'required|string|max:255|unique:bahan_mentahs,nama_bahan',
             'harga_beli' => 'required|integer',
             'kategori_id' => 'required|exists:kategoris,id',
-            'stok' => 'required|integer|min:0',
+            'menu_id' => 'required|exists:menus,id', // Hanya untuk pivot
+            'jumlah' => 'nullable|integer|min:1',     // Optional jumlah pivot
         ], [
             'nama_bahan.unique' => 'Nama bahan telah terbuat sebelumnya',
         ]);
 
-        // Log sebelum create
-        Log::info('Creating bahan: ' . $validated['nama_bahan']);
-
         $name = auth()->user()->name;
+
+        // Simpan aktivitas
         Aktivitas::create([
             'user_id' => auth()->user()->id,
             'action' => "{$name} menambahkan Bahan Mentah {$validated['nama_bahan']}",
             'aktivitas' => null,
         ]);
 
-        $bahan = bahan_mentah::create($validated);
+        // Buat bahan baru
+        $bahan = bahan_mentah::create([
+            'nama_bahan' => $validated['nama_bahan'],
+            'harga_beli' => $validated['harga_beli'],
+            'kategori_id' => $validated['kategori_id'],
+        ]);
 
-        // Log setelah create
-        Log::info('Bahan created successfully');
-        Log::info('User ID after: ' . auth()->id());
-        Log::info('Session ID after: ' . session()->getId());
+        // Attach ke menu lewat pivot
+        $menu = Menu::findOrFail($validated['menu_id']);
+        $menu->bahanMentahs()->attach($bahan->id, [
+            'jumlah' => $validated['jumlah'] ?? 1,
+        ]);
 
-        return response()->json($bahan->load(['menu', 'kategori']));
+        return response()->json($bahan->load(['menus', 'kategori']));
     }
+
 
     public function update(Request $request, $id)
     {
         $bahan = bahan_mentah::findOrFail($id);
 
-        $data = $request->only(['nama_bahan', 'harga_beli', 'stok', 'kategori_id']);
+        $data = $request->only(['nama_bahan', 'harga_beli', 'kategori_id']);
 
         $name = auth()->user()->name;
         $bahan->update($data);

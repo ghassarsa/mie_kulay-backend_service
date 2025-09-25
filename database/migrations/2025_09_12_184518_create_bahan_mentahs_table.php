@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('nama_bahan');
             $table->integer('harga_beli');
             $table->foreignId('kategori_id');
-            $table->integer('stok');
             $table->timestamps();
         });
     }
