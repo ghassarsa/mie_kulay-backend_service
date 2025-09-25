@@ -55,27 +55,18 @@ class UserController extends Controller
             'password' => 'required|string',
         ]);
 
-        $remember = $request->boolean('remember', false);
+        $remember = true;
 
         if (!Auth::attempt($credentials, $remember)) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
         $request->session()->regenerate();
-        $cookie = Cookie::make(
-            '_lsrf-tkmen',
-            $request->email,
-            5 * 365 * 24 * 60,
-            '/',
-            null,
-            false,
-            true
-        );
 
         return response()->json([
             'message' => 'Login successful',
             'user' => Auth::user()
-        ])->withCookie($cookie);
+        ]);
     }
 
 
