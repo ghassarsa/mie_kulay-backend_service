@@ -59,7 +59,8 @@ Route::controller(BahanController::class)->group(function () {
     Route::get('/bahan', 'index');
     Route::middleware(['web', EnsureFrontendRequestsAreStateful::class])->group(function () {
         Route::middleware('auth:sanctum')->group(function () {
-            Route::post('/tambah/bahan', 'store');
+            // Route::post('/tambah/bahan', 'store');
+            Route::post('/tambah/bahan/langsung', 'storeBahanMentah');
             Route::put('/edit/bahan/{id}', 'update');
             Route::delete('/hapus/bahan/{id}', 'destroy');
         });

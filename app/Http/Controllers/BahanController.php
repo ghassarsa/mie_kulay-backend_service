@@ -53,6 +53,20 @@ class BahanController extends Controller
         return response()->json($bahan->load(['menus', 'kategori']));
     }
 
+    public function storeBahanMentah(Request $request)
+    {
+        $validated = $request->validate([
+            'nama_bahan' => 'required|string|max:255|unique:bahan_mentahs,nama_bahan',
+            'harga_beli' => 'required|integer',
+            'kategori_id' => 'required|exists:kategoris,id',
+        ], [
+            'nama_bahan.unique' => 'Nama bahan telah terbuat sebelumnya',
+        ]);
+
+        $bahan = bahan_mentah::create($validated);
+
+        return response()->json($bahan);
+    }
 
     public function update(Request $request, $id)
     {
