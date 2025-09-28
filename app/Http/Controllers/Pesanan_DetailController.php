@@ -37,17 +37,20 @@ class Pesanan_DetailController extends Controller
             ->get()
             ->keyBy('id');
 
-        foreach ($validatedData as $item) {
-            $menu = $menus[$item['menu_id']];
-            foreach ($menu->bahanMentahs as $bahan) {
-                $required = $bahan->pivot->jumlah * $item['jumlah'];
-                if ($bahan->stok < $required) {
-                    return response()->json([
-                        'message' => "Stok bahan '{$bahan->nama_bahan}' untuk menu '{$menu->nama_hidangan}' tidak cukup"
-                    ], 422);
-                }
+        // Hilangkan pengecekan stok jika tidak ingin mengurangi stok
+        /*
+    foreach ($validatedData as $item) {
+        $menu = $menus[$item['menu_id']];
+        foreach ($menu->bahanMentahs as $bahan) {
+            $required = $bahan->pivot->jumlah * $item['jumlah'];
+            if ($bahan->stok < $required) {
+                return response()->json([
+                    'message' => "Stok bahan '{$bahan->nama_bahan}' untuk menu '{$menu->nama_hidangan}' tidak cukup"
+                ], 422);
             }
         }
+    }
+    */
 
         $pesanan = Pesanan::create([
             'id' => 'PSN' . mt_rand(1000000000, 9999999999),
@@ -73,10 +76,13 @@ class Pesanan_DetailController extends Controller
                 'subtotal' => $subtotal,
             ]);
 
-            foreach ($menu->bahanMentahs as $bahan) {
-                $bahan->stok -= $bahan->pivot->jumlah * $item['jumlah'];
-                $bahan->save();
-            }
+            // Tidak mengurangi stok bahan
+            /*
+        foreach ($menu->bahanMentahs as $bahan) {
+            $bahan->stok -= $bahan->pivot->jumlah * $item['jumlah'];
+            $bahan->save();
+        }
+        */
         }
 
         $pesanan->update(['total_pesanan' => $total]);

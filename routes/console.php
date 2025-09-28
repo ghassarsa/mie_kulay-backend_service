@@ -92,7 +92,15 @@ Artisan::command('laporan:to-analisis-month', function () {
 Artisan::command('laporan:to-analisis-year', function () {
     $tahun_lalu = now()->subYear()->year;
     $periode_tahunan = Carbon::create($tahun_lalu)->startOfYear();
-    $lastReport = max(Analisis_Keuangan::max('daftar_laporan'), Analisis_Makanan::max('daftar_laporan'), 0) + 1;
+    $lastMonthlyReport = max(
+        Analisis_Keuangan::whereYear('periode_bulanan', $tahun_lalu)->max('daftar_laporan') ?? 0,
+        Analisis_Makanan::whereYear('periode_bulanan', $tahun_lalu)->max('daftar_laporan') ?? 0
+    );
+
+    if ($lastMonthlyReport === 0) {
+        $this->info("Tidak ada data bulanan tahun $tahun_lalu untuk dianalisis.");
+        return;
+    }
 
     $keuanganBulanan = Analisis_Keuangan::whereYear('periode_bulanan', $tahun_lalu)
         ->whereNull('periode_tahunan')
@@ -111,7 +119,7 @@ Artisan::command('laporan:to-analisis-year', function () {
             'total_pengeluaran' => $totalPengeluaran,
             'hasil_keuntungan'  => $totalKeuntungan,
             'order_average'     => round($orderAverage),
-            'daftar_laporan'    => $lastReport,
+            'daftar_laporan'    => $lastMonthlyReport,
             'periode_bulanan'   => null,
             'periode_tahunan'   => $periode_tahunan,
         ]);
@@ -140,7 +148,7 @@ Artisan::command('laporan:to-analisis-year', function () {
             $averageHidangan = $totalOrders > 0 ? $totalJumlah / $totalOrders : 0;
 
             Analisis_Makanan::create([
-                'daftar_laporan'   => $lastReport,
+                'daftar_laporan'   => $lastMonthlyReport,
                 'nama_hidangan'    => $namaHidangan,
                 'total_jumlah'     => $totalJumlah,
                 'average_hidangan' => round($averageHidangan, 2),
