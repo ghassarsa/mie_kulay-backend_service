@@ -7,23 +7,33 @@ use App\Models\Analisis_Makanan;
 use App\Models\Favorite_Menu;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AnalisisController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $keuangan = Analisis_Keuangan::orderBy('periode_bulanan', 'desc')
-            ->orderBy('periode_tahunan', 'desc')
-            ->get();
+        $tahun = $request->tahun ?? date('Y');
 
-        $makanan = Analisis_Makanan::orderBy('periode_bulanan', 'desc')
+        // Ambil data keuangan berdasarkan tahun
+        $keuangan = Analisis_Keuangan::whereYear('periode_tahunan', $tahun)
             ->orderBy('periode_tahunan', 'desc')
             ->get();
 
         return response()->json([
             'keuangan' => $keuangan,
-            'makanan'  => $makanan,
         ]);
+    }
+
+    public function tahunList()
+    {
+        $years = Analisis_Keuangan::query()
+            ->selectRaw('YEAR(COALESCE(periode_tahunan, periode_bulanan)) as year')
+            ->distinct()
+            ->orderBy('year', 'asc')
+            ->pluck('year');
+
+        return response()->json(['years' => $years]);
     }
 
     public function monthlyIncome()

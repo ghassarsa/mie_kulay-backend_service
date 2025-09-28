@@ -38,7 +38,8 @@ Route::controller(PengeluaranController::class)->group(function () {
     });
 });
 
-Route::get('index', [AnalisisController::class, 'index'])->middleware(['auth:sanctum', 'role:owner']);
+Route::get('analisis', [AnalisisController::class, 'index']);
+Route::get('analisis-tahun-list', [AnalisisController::class, 'tahunList']);
 Route::get('monthly-income', [AnalisisController::class, 'monthlyIncome']);
 Route::get('monthly-expenses', [AnalisisController::class, 'monthlyExpenses']);
 Route::get('monthly-orders', [AnalisisController::class, 'monthlyOrders']);
