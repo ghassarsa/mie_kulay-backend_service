@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nama_bahan');
             $table->integer('harga_beli');
-            $table->foreignId('kategori_id');
+            $table->enum('tipe', ['bahan_mentah', 'bahan_baku', 'bahan_lengkap']);
             $table->timestamps();
         });
     }

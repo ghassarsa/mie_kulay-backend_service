@@ -58,7 +58,7 @@ class BahanController extends Controller
         $validated = $request->validate([
             'nama_bahan' => 'required|string|max:255|unique:bahan_mentahs,nama_bahan',
             'harga_beli' => 'required|integer',
-            'kategori_id' => 'required|exists:kategoris,id',
+            'tipe'       => 'required|string|in:bahan_mentah,bahan_baku,bahan_lengkap',
         ], [
             'nama_bahan.unique' => 'Nama bahan telah terbuat sebelumnya',
         ]);

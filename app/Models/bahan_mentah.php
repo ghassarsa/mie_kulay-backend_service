@@ -9,17 +9,12 @@ class bahan_mentah extends Model
     protected $fillable = [
         'nama_bahan',
         'harga_beli',
-        'kategori_id',
+        'tipe',
     ];
 
     public function menu()
     {
         return $this->belongsTo(Menu::class, 'menu_id');
-    }
-
-    public function kategori()
-    {
-        return $this->belongsTo(Kategori::class, 'kategori_id');
     }
 
     public function menus()

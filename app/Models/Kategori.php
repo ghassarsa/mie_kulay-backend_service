@@ -14,11 +14,6 @@ class Kategori extends Model
 
     public $timestamps = false;
 
-    public function bahan()
-    {
-        return $this->hasMany(bahan_mentah::class, 'kategori_id');
-    }
-
     public function menus()
     {
         return $this->hasMany(Menu::class, 'kategori_id', 'id');
