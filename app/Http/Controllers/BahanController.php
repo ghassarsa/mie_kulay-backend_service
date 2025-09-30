@@ -12,7 +12,7 @@ class BahanController extends Controller
 {
     public function index()
     {
-        $bahan = bahan_mentah::with('kategori')->get();
+        $bahan = bahan_mentah::all();
         return response()->json($bahan);
     }
 
@@ -72,7 +72,7 @@ class BahanController extends Controller
     {
         $bahan = bahan_mentah::findOrFail($id);
 
-        $data = $request->only(['nama_bahan', 'harga_beli', 'kategori_id']);
+        $data = $request->only(['nama_bahan', 'harga_beli', 'tipe']);
 
         $name = auth()->user()->name;
         $bahan->update($data);
@@ -84,7 +84,7 @@ class BahanController extends Controller
 
         return response()->json([
             'message' => 'Bahan berhasil diupdate',
-            'data' => $bahan->load('kategori')
+            'data' => $bahan,
         ]);
     }
 
