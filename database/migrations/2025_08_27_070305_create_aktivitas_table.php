@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreign('pesanan_id')->references('id')->on('pesanans')->onDelete('cascade');
             $table->string('action');
             $table->longText('aktivitas')->nullable();
+            $table->string('table_name');
             $table->timestamps();
         });
     }

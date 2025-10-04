@@ -36,10 +36,18 @@ class MenuController extends Controller
             $validated['gambar'] = $path;
         }
 
+        $changes = [
+            "Nama Hidangan: {$validated['nama_hidangan']}",
+            "Harga Jual: {$validated['harga_jual']}",
+        ];
+
+        $aktivitasText = implode("\n", $changes);
+
         Aktivitas::create([
             'user_id' => auth()->user()->id,
             'action' => "Owner menambahkan Menu {$validated['nama_hidangan']}",
-            'aktivitas' => null,
+            'aktivitas' => $aktivitasText,
+            'table_name' => 'menu',
         ]);
 
         $menu = Menu::create($validated);
@@ -85,9 +93,9 @@ class MenuController extends Controller
             $validated['gambar'] = $path;
         }
 
-        $oldName = $menu->nama_hidangan ?? 'Menu';
+        $oldValues = $menu->getOriginal(); // data lama
         $menu->update($validated);
-        $newName = $menu->nama_hidangan ?? $oldName;
+        $newValues = $menu->getAttributes(); // data baru
 
         // Handle bahan opsional
         if ($request->has('bahan')) {
@@ -109,11 +117,24 @@ class MenuController extends Controller
             ]);
         }
 
+        // Bandingkan perubahan
+        $changes = [];
+        foreach (['nama_hidangan', 'harga_jual', 'kategori_id', 'gambar'] as $field) {
+            if (array_key_exists($field, $validated) && $oldValues[$field] != $newValues[$field]) {
+                $changes[] = ucfirst(str_replace('_', ' ', $field)) .
+                    " dari '{$oldValues[$field]}' menjadi '{$newValues[$field]}'";
+            }
+        }
+
+        $aktivitasText = !empty($changes) ? implode("\n", $changes) : null;
+
+        $user = auth()->user();
         // Catat aktivitas
         Aktivitas::create([
-            'user_id'   => auth()->user()->id,
-            'aktivitas' => "Owner mengubah Menu {$oldName} menjadi {$newName}",
+            'user_id'   => $user->name,
+            'aktivitas' => $aktivitasText,
             'action'    => 'update',
+            'table_name' => 'menu',
         ]);
 
         return response()->json($menu->load(['kategori', 'pesanan_detail', 'bahanMentahs']));
@@ -123,9 +144,12 @@ class MenuController extends Controller
     {
         $menu = Menu::findOrFail($id);
         $menu->delete();
+
+        $user = auth()->user();
         Aktivitas::create([
             'user_id' => auth()->user()->id,
-            'action' => "Owner menghapus Menu {$menu->nama_hidangan}",
+            'action' => "{$user} menghapus menu {$menu->nama_hidangan}",
+            'table_name' => 'menu',
             'aktivitas' => null,
         ]);
 

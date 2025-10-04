@@ -34,6 +34,7 @@ class PengeluaranController extends Controller
             Aktivitas::create([
                 'user_id' => auth()->id(),
                 'action' => "{$name} Menambahkan pengeluaran sebesar {$validate['pengeluaran']}",
+                'table_name' => 'pengeluaran',
                 'aktivitas' => null,
             ]);
         }
@@ -70,6 +71,7 @@ class PengeluaranController extends Controller
                 'action'    => isset($validate['pengeluaran'])
                     ? "{$name} Mengubah pengeluaran menjadi sebesar {$validate['pengeluaran']}"
                     : "{$name} Mengubah data pengeluaran",
+                'table_name' => 'pengeluaran',
                 'aktivitas' => null,
             ]);
         }
@@ -89,6 +91,7 @@ class PengeluaranController extends Controller
         Aktivitas::create([
             'user_id' => auth()->id(),
             'action' => "{$name} Menghapus pengeluaran sebesar {$pengeluaran->pengeluaran}",
+            'table_name' => 'pengeluaran',
             'aktivitas' => null,
         ]);
 

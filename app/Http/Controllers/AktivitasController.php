@@ -7,10 +7,15 @@ use Illuminate\Http\Request;
 
 class AktivitasController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $aktivitas = Aktivitas::with('user')->latest()->get();
+        $query = Aktivitas::with('user')->latest();
 
-        return response()->json($aktivitas);
+        // Filter berdasarkan nama tabel
+        if ($request->has('table') && $request->table !== 'All') {
+            $query->where('table_name', $request->table);
+        }
+
+        return response()->json($query->get());
     }
 }

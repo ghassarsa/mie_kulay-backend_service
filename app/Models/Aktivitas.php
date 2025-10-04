@@ -10,6 +10,7 @@ class Aktivitas extends Model
         'user_id',
         'action',
         'aktivitas',
+        'table_name',
         'pesanan_id',
     ];
 

@@ -91,6 +91,7 @@ class Pesanan_DetailController extends Controller
             'user_id' => auth()->user()->id,
             'action' => auth()->user()->name . " Membuat Pesanan {$pesanan->id}",
             'aktivitas' => null,
+            'table_name' => 'pesanan',
             'pesanan_id' => $pesanan->id,
         ]);
 
@@ -117,8 +118,8 @@ class Pesanan_DetailController extends Controller
             'details.*.harga_satuan' => 'nullable|integer',
         ]);
 
-        $name = auth()->user()->name;
-        $logText = "";
+        // $name = auth()->user()->name;
+        // $logText = "";
 
         foreach ($validated['details'] as $item) {
             $detail = Pesanan_Detail::findOrFail($item['id']);
@@ -127,14 +128,14 @@ class Pesanan_DetailController extends Controller
                 'harga_satuan' => $item['harga_satuan'] ?? $detail->harga_satuan,
             ]);
 
-            $logText .= "- Mengubah Detail {$detail->id} ({$detail->nama_hidangan})\n";
+            // $logText .= "- Mengubah Detail {$detail->id} ({$detail->nama_hidangan})\n";
         }
-        $name = auth()->user()->name;
-        Aktivitas::create([
-            'user_id' => auth()->user()->id,
-            'action' => "{$name} Melakukan pdate pada detail pesanan",
-            'aktivitas' => $logText,
-        ]);
+        // $name = auth()->user()->name;
+        // Aktivitas::create([
+        //     'user_id' => auth()->user()->id,
+        //     'action' => "{$name} Melakukan pdate pada detail pesanan",
+        //     'aktivitas' => $logText,
+        // ]);
 
         return response()->json($detail->load(['Pesanan', 'Menu']));
     }

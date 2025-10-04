@@ -28,15 +28,6 @@ class BahanController extends Controller
             'nama_bahan.unique' => 'Nama bahan telah terbuat sebelumnya',
         ]);
 
-        $name = auth()->user()->name;
-
-        // Simpan aktivitas
-        Aktivitas::create([
-            'user_id' => auth()->user()->id,
-            'action' => "{$name} menambahkan Bahan Mentah {$validated['nama_bahan']}",
-            'aktivitas' => null,
-        ]);
-
         // Buat bahan baru
         $bahan = bahan_mentah::create([
             'nama_bahan' => $validated['nama_bahan'],
@@ -65,6 +56,16 @@ class BahanController extends Controller
 
         $bahan = bahan_mentah::create($validated);
 
+        $name = auth()->user()->name;
+
+        // Simpan aktivitas
+        Aktivitas::create([
+            'user_id' => auth()->user()->id,
+            'action' => "{$name} menambahkan Bahan Mentah {$validated['nama_bahan']}",
+            'table_name' => 'bahan',
+            'aktivitas' => null,
+        ]);
+
         return response()->json($bahan);
     }
 
@@ -72,14 +73,27 @@ class BahanController extends Controller
     {
         $bahan = bahan_mentah::findOrFail($id);
 
-        $data = $request->only(['nama_bahan', 'harga_beli', 'tipe']);
+        // simpan nilai lama dulu
+        $old = $bahan->only(['nama_bahan', 'harga_beli', 'tipe']);
 
+        $data = $request->only(['nama_bahan', 'harga_beli', 'tipe']);
         $name = auth()->user()->name;
         $bahan->update($data);
+
+        $changes = [];
+        foreach ($data as $key => $value) {
+            if ($old[$key] != $value) {
+                $changes[] = "{$key} dari '{$old[$key]}' menjadi '{$value}'";
+            }
+        }
+
+        $changeText = implode(", ", $changes);
+
         Aktivitas::create([
             'user_id' => auth()->user()->id,
-            'action' => "{$name} mengubah Bahan Mentah {$bahan->nama_bahan}",
-            'aktivitas' => null,
+            'action' => "{$name} mengubah bahan {$bahan->nama_bahan}",
+            'aktivitas' => $changeText,
+            'table_name' => 'bahan',
         ]);
 
         return response()->json([
@@ -98,6 +112,7 @@ class BahanController extends Controller
             'user_id' => auth()->user()->id,
             'action' => "{$name} menghapus Bahan {$bahan->nama_bahan}",
             'aktivitas' => null,
+            'table_name' => 'bahan',
         ]);
 
         return response()->json([

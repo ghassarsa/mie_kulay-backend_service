@@ -26,6 +26,15 @@ class CategoryController extends Controller
             'jenis_hidangan' => $validated['jenis_hidangan'],
         ]);
 
+        $name = auth()->user()->name;
+        // Simpan aktivitas
+        Aktivitas::create([
+            'user_id' => auth()->user()->id,
+            'action' => "{$name} menambahkan kategori {$validated['jenis_hidangan']}",
+            'table_name' => 'kategori',
+            'aktivitas' => null,
+        ]);
+
         return response()->json([
             'message' => 'Kategori berhasil ditambahkan',
             'data' => $kategori
@@ -44,6 +53,15 @@ class CategoryController extends Controller
             'jenis_hidangan' => $validated['jenis_hidangan'],
         ]);
 
+        $name = auth()->user()->name;
+        // Simpan aktivitas
+        Aktivitas::create([
+            'user_id' => auth()->user()->id,
+            'action' => "{$name} mengubah kategori {$kategori->jenis_hidangan}",
+            'table_name' => 'kategori',
+            'aktivitas' => null,
+        ]);
+
         return response()->json([
             'message' => 'Kategori berhasil diperbarui',
             'data' => $kategori
@@ -59,7 +77,8 @@ class CategoryController extends Controller
         $name = auth()->user()->name;
         Aktivitas::create([
             'user_id' => auth()->user()->id,
-            'action' => "{$name} menghapus Category {$category->jenis_hidangan}",
+            'action' => "{$name} menghapus kategori {$category->jenis_hidangan}",
+            'table_name' => 'kategori',
             'aktivitas' => null,
         ]);
 
