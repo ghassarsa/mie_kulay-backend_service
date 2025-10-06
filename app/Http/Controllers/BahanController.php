@@ -142,4 +142,19 @@ class BahanController extends Controller
             'message' => 'Menu berhasil dihapus'
         ]);
     }
+
+    public function deletePivot(Request $request)
+    {
+        $validated = $request->validate([
+            'menu_id' => 'required|exists:menus,id',
+            'bahan_id' => 'required|exists:bahan_mentahs,id',
+        ]);
+
+        $menu = Menu::findOrFail($validated['menu_id']);
+        $menu->bahanMentahs()->detach($validated['bahan_id']);
+
+        return response()->json([
+            'message' => 'Bahan berhasil dihapus'
+        ]);
+    }
 }
