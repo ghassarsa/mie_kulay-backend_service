@@ -105,7 +105,7 @@ class MenuController extends Controller
                 $newBahan = bahan_mentah::create([
                     'nama_bahan'  => $bahan['nama'] ?? 'Bahan baru',
                     'harga_beli'  => $bahan['harga'] ?? 0,
-                    'kategori_id' => $bahan['kategori_id'] ?? 1,
+                    'tipe'        => $bahan['tipe'] ?? 'bahan_mentah',
                 ]);
                 $bahanId = $newBahan->id;
             } else {
@@ -131,7 +131,7 @@ class MenuController extends Controller
         $user = auth()->user();
         // Catat aktivitas
         Aktivitas::create([
-            'user_id'   => $user->name,
+            'user_id'   => $user->id,
             'aktivitas' => $aktivitasText,
             'action'    => 'update',
             'table_name' => 'menu',

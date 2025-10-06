@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AktivitasController;
 use App\Http\Controllers\AnalisisController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\BahanController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\MenuController;
@@ -60,7 +61,8 @@ Route::controller(BahanController::class)->group(function () {
     Route::get('/bahan', 'index');
     Route::middleware(['web', EnsureFrontendRequestsAreStateful::class])->group(function () {
         Route::middleware('auth:sanctum')->group(function () {
-            // Route::post('/tambah/bahan', 'store');
+            Route::post('/tambah/bahan', 'store');
+            Route::get('/attach/bahan', 'attachBahan');
             Route::post('/tambah/bahan/langsung', 'storeBahanMentah');
             Route::put('/edit/bahan/{id}', 'update');
             Route::delete('/hapus/bahan/{id}', 'destroy');
@@ -99,3 +101,7 @@ Route::middleware('auth:sanctum')->group(function () {
         });
     });
 });
+
+
+// If user forget
+Route::post('/password/forgot', [ForgotPasswordController::class, 'sendResetLinkEmail']);

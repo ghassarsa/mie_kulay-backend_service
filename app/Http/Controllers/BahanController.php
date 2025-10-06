@@ -19,30 +19,53 @@ class BahanController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nama_bahan' => 'required|string|max:255|unique:bahan_mentahs,nama_bahan',
-            'harga_beli' => 'required|integer',
-            'kategori_id' => 'required|exists:kategoris,id',
-            'menu_id' => 'required|exists:menus,id', // Hanya untuk pivot
-            'jumlah' => 'nullable|integer|min:1',     // Optional jumlah pivot
-        ], [
-            'nama_bahan.unique' => 'Nama bahan telah terbuat sebelumnya',
+            'menu_id'    => 'required|exists:menus,id',
+            'bahan_id'   => 'nullable|exists:bahan_mentahs,id',
+            'nama_bahan' => 'nullable|string|max:255|unique:bahan_mentahs,nama_bahan',
+            'harga_beli' => 'nullable|integer',
+            'tipe'       => 'nullable|string|in:bahan_mentah,bahan_baku,bahan_lengkap',
+            'jumlah'     => 'required|integer|min:1',
         ]);
 
-        // Buat bahan baru
-        $bahan = bahan_mentah::create([
-            'nama_bahan' => $validated['nama_bahan'],
-            'harga_beli' => $validated['harga_beli'],
-            'kategori_id' => $validated['kategori_id'],
-        ]);
-
-        // Attach ke menu lewat pivot
         $menu = Menu::findOrFail($validated['menu_id']);
-        $menu->bahanMentahs()->attach($bahan->id, [
-            'jumlah' => $validated['jumlah'] ?? 1,
-        ]);
 
-        return response()->json($bahan->load(['menus', 'kategori']));
+        if (!empty($validated['bahan_id'])) {
+            // Attach bahan lama
+            $menu->bahanMentahs()->attach($validated['bahan_id'], [
+                'jumlah' => $validated['jumlah']
+            ]);
+            $bahan = bahan_mentah::find($validated['bahan_id']);
+        } else {
+            // Buat bahan baru & attach
+            $bahan = bahan_mentah::create([
+                'nama_bahan' => $validated['nama_bahan'],
+                'harga_beli' => $validated['harga_beli'],
+                'tipe'       => $validated['tipe'],
+            ]);
+            $menu->bahanMentahs()->attach($bahan->id, [
+                'jumlah' => $validated['jumlah']
+            ]);
+        }
+
+        return response()->json($bahan->load('menus'));
     }
+
+
+    // public function attachBahan(Request $request)
+    // {
+    //     $validated = $request->validate([
+    //         'menu_id' => 'required|exists:menus,id',
+    //         'bahan_id' => 'required|exists:bahan_mentahs,id',
+    //         'jumlah' => 'required|integer|min:1',
+    //     ]);
+
+    //     $menu = Menu::findOrFail($validated['menu_id']);
+    //     $menu->bahanMentahs()->attach($validated['bahan_id'], [
+    //         'jumlah' => $validated['jumlah'],
+    //     ]);
+
+    //     return response()->json(['success' => true]);
+    // }
 
     public function storeBahanMentah(Request $request)
     {
