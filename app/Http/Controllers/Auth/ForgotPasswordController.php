@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Notifications\ResetPasswordNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 
@@ -15,17 +18,17 @@ class ForgotPasswordController extends Controller
             'email' => 'required|email',
         ]);
 
-        $status = Password::sendResetLink(
-            $request->only('email')
-        );
+        $user = User::where('email', $request->email)->first();
 
-        Log::info('Reset link status:', ['status' => $status]);
-
-        if ($status === Password::RESET_LINK_SENT) {
-            return response()->json(['message' => 'Link reset password telah dikirim ke email Anda.']);
+        if (!$user) {
+            return response()->json(['message' => 'Email tidak ditemukan.'], 404);
         }
 
-        return response()->json(['message' => $status], 404);
+        // Kirim notifikasi dengan token FE
+        $token = Password::createToken($user);
+        $user->notify(new ResetPasswordNotification($token));
+
+        return response()->json(['message' => 'Link reset password telah dikirim ke email Anda.']);
     }
 
     public function showResetForm($token)
@@ -51,9 +54,9 @@ class ForgotPasswordController extends Controller
         );
 
         if ($status === Password::PASSWORD_RESET) {
-            return response()->json(['message' => 'Password berhasil direset.']);
+            return response()->json(['message' => 'Password berhasil direset']);
         }
 
-        return response()->json(['message' => 'Token tidak valid atau sudah kadaluarsa.'], 400);
+        return response()->json(['message' => 'Token tidak valid atau sudah kadaluarsa'], 400);
     }
 }
