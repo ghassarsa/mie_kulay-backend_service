@@ -47,7 +47,13 @@ class BahanController extends Controller
             ]);
         }
 
-        return response()->json($bahan->load('menus'));
+        return response()->json([
+            'id' => $bahan->id,
+            'nama_bahan' => $bahan->nama_bahan,
+            'harga_beli' => $bahan->harga_beli,
+            'tipe' => $bahan->tipe,
+            'jumlah' => $validated['jumlah'],
+        ]);
     }
 
 
