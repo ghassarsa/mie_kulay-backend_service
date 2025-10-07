@@ -107,4 +107,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 // If user forget
-Route::post('/password/forgot', [ForgotPasswordController::class, 'sendResetLinkEmail']);
+Route::post('/password/forgot', [ForgotPasswordController::class, 'sendResetLink']);
+Route::get('/password/reset/{token}', [ForgotPasswordController::class, 'showResetForm'])
+    ->name('password.reset');
