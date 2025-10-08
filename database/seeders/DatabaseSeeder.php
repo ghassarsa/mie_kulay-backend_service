@@ -18,7 +18,14 @@ class DatabaseSeeder extends Seeder
 
         User::factory()->create([
             'name' => 'Test User',
-            'email' => 'test@example.com',
+            'email' => 'staff@example.com',
+            'password' => '12345678910',
+        ]);
+        User::factory()->create([
+            'name' => 'Test User',
+            'email' => 'owner@example.com',
+            'password' => '12345678910',
+            'role' => 'owner',
         ]);
 
         Kategori::insert([
