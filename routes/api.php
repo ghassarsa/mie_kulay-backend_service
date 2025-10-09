@@ -11,10 +11,7 @@ use App\Http\Controllers\Pesanan_DetailController;
 use App\Http\Controllers\PesananController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
-use Laravel\Sanctum\Http\Controllers\CsrfCookieController;
 use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
-
-Route::get('/sanctum/csrf-cookie', [CsrfCookieController::class, 'show']);
 
 Route::controller(UserController::class)->group(function () {
     Route::get('/users', 'users');
