@@ -10,7 +10,7 @@ class Cors
     public function handle(Request $request, Closure $next)
     {
         $headers = [
-            'Access-Control-Allow-Origin'      => 'http://localhost:5173',
+            'Access-Control-Allow-Origin'      => '*',
             'Access-Control-Allow-Methods'     => 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
             'Access-Control-Allow-Headers'     => 'Content-Type, Authorization, X-XSRF-TOKEN',
             'Access-Control-Allow-Credentials' => 'true',
