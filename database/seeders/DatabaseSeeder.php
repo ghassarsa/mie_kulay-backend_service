@@ -27,6 +27,12 @@ class DatabaseSeeder extends Seeder
             'password' => '12345678910',
             'role' => 'owner',
         ]);
+        User::create([
+            'name' => 'Test User',
+            'email' => 'admin@example.com',
+            'password' => '123123123',
+            'role' => 'admin',
+        ]);
 
         Kategori::insert([
             ['jenis_hidangan' => 'makanan'],

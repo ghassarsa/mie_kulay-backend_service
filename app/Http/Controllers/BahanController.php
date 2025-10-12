@@ -137,20 +137,40 @@ class BahanController extends Controller
     // laporan pendapatan bahan lengkap
     public function laporanPendapatanBahanLengkap()
     {
-        $bahanLengkap = Pesanan_Detail::whereHas('menu', function ($query) {
+        // Total subtotal dari semua pesanan bertipe bahan_lengkap
+        $pesananDetails = Pesanan_Detail::whereHas('menu.bahanMentahs', function ($query) {
             $query->where('tipe', 'bahan_lengkap');
-        })->get();
+        })
+            ->with('menu.bahanMentahs')
+            ->get();
+
+        // Total subtotal
+        $hasilPendapatan = $pesananDetails->sum('subtotal');
+
+        // Total biaya bahan
+        $biayaBahan = $pesananDetails
+            ->flatMap(fn($detail) => $detail->menu->bahanMentahs->where('tipe', 'bahan_lengkap'))
+            ->sum('harga_beli');
+
+        $totalPendapatan = $hasilPendapatan - $biayaBahan;
 
         // Ambil nomor laporan terakhir
         $lastNumber = Pendapatan_Bahan_Lengkap::max('daftar_laporan');
         $nextNumber = $lastNumber ? $lastNumber + 1 : 1;
 
-        Pendapatan_Bahan_Lengkap::create([
+        // Simpan laporan baru
+        $laporan = Pendapatan_Bahan_Lengkap::create([
             'daftar_laporan' => $nextNumber,
-            'hasil_pendapatan' => $bahanLengkap->sum('subtotal'),
+            'hasil_pendapatan' => $totalPendapatan,
         ]);
 
-        return response()->json($bahanLengkap);
+        $pesananDetails->each(fn($detail) => $detail->update(['status' => 'sudah']));
+
+        // Balikin datanya
+        return response()->json([
+            'laporan' => $laporan,
+            'total_pendapatan' => $totalPendapatan,
+        ]);
     }
 
     public function destroy($id)
