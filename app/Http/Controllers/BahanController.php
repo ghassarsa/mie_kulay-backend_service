@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Aktivitas;
 use App\Models\bahan_mentah;
 use App\Models\Menu;
+use App\Models\Pendapatan_Bahan_Lengkap;
+use App\Models\Pesanan_Detail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -129,6 +131,26 @@ class BahanController extends Controller
             'message' => 'Bahan berhasil diupdate',
             'data' => $bahan,
         ]);
+    }
+
+
+    // laporan pendapatan bahan lengkap
+    public function laporanPendapatanBahanLengkap()
+    {
+        $bahanLengkap = Pesanan_Detail::whereHas('menu', function ($query) {
+            $query->where('tipe', 'bahan_lengkap');
+        })->get();
+
+        // Ambil nomor laporan terakhir
+        $lastNumber = Pendapatan_Bahan_Lengkap::max('daftar_laporan');
+        $nextNumber = $lastNumber ? $lastNumber + 1 : 1;
+
+        Pendapatan_Bahan_Lengkap::create([
+            'daftar_laporan' => $nextNumber,
+            'hasil_pendapatan' => $bahanLengkap->sum('subtotal'),
+        ]);
+
+        return response()->json($bahanLengkap);
     }
 
     public function destroy($id)

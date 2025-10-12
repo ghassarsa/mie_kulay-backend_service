@@ -69,6 +69,8 @@ Route::controller(BahanController::class)->group(function () {
 
             // pivot
             Route::post('/delete-pivot', 'deletePivot');
+            // bahan lengkap 
+            Route::get('/pendapatan/bahan/lengkap', 'laporanPendapatanBahanLengkap');
         });
     });
 });
