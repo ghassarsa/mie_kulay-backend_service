@@ -16,8 +16,8 @@ use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 Route::controller(UserController::class)->group(function () {
     Route::get('/users', 'users');
     Route::post('/register', 'register');
+    Route::post('/login', [UserController::class, 'login']);
     Route::middleware(['web'])->group(function () {
-        Route::post('/login', [UserController::class, 'login']);
         Route::middleware(['auth:sanctum', EnsureFrontendRequestsAreStateful::class])->group(function () {
             Route::post('/logout', 'logout');
             Route::get('/user', 'user');
