@@ -5,6 +5,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Http\Middleware\HandleCors;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Support\Facades\Log;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -15,7 +17,21 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->prepend(Cors::class);
+        // // Global middleware
+        // $middleware->prepend(TrustProxies::class);
+
+        // // HAPUS HandleCors Laravel default!
+        // // Kita pakai custom Cors middleware saja
+
+        // // API middleware group
+        // $middleware->api(prepend: [
+        //     Cors::class, // Custom CORS di urutan pertama API
+        //     \Illuminate\Cookie\Middleware\EncryptCookies::class,
+        //     \Illuminate\Session\Middleware\StartSession::class,
+        // ]);
+
+        // // Stateful API untuk Sanctum
+        // $middleware->statefulApi();
     })
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->command('laporan:to-analisis-month')

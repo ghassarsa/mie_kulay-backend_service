@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class UserController extends Controller
 {
@@ -50,25 +51,37 @@ class UserController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->validate([
+        $request->validate([
             'email' => 'required|email',
             'password' => 'required|string',
         ]);
 
-        $remember = true;
+        $user = User::where('email', $request->email)->first();
 
-        if (!Auth::attempt($credentials, $remember)) {
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        $user = Auth::user();
-        $token = $user->createToken('api_token')->plainTextToken;
+        $accessToken = $user->createToken('access-token')->plainTextToken;
+        $refreshToken = $user->createToken('refresh-token')->plainTextToken;
 
         return response()->json([
-            'message' => 'Login successful',
-            'token' => $token,
-            'user' => $user
+            'user' => $user,
+            'access_token' => $accessToken,
+            'refresh_token' => $refreshToken,
         ]);
+    }
+
+    public function refresh(Request $request)
+    {
+        $refreshToken = $request->input('refresh_token');
+        $tokenModel = PersonalAccessToken::findToken($refreshToken);
+        if (!$tokenModel) return response()->json(['message' => 'Unauthorized'], 401);
+
+        $user = $tokenModel->tokenable;
+        $newAccessToken = $user->createToken('access-token')->plainTextToken;
+
+        return response()->json(['access_token' => $newAccessToken]);
     }
 
     public function updateProfile(Request $request)
