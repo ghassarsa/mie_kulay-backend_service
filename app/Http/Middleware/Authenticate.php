@@ -12,6 +12,6 @@ class Authenticate extends \Illuminate\Auth\Middleware\Authenticate
     {
        abort(response()->json([
            'message' => 'Unauthenticated.'
-       ]));
+       ]), 401);
     }
 }
