@@ -56,19 +56,27 @@ class UserController extends Controller
             'password' => 'required|string',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+//        $user = User::where('email', $request->email)->first();
+//
+//        if (!$user || !Hash::check($request->password, $user->password)) {
+//            return response()->json(['message' => 'Invalid credentials'], 401);
+//        }
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (Auth::attempt($request->only('email', 'password'))) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        $accessToken = $user->createToken('access-token')->plainTextToken;
-        $refreshToken = $user->createToken('refresh-token')->plainTextToken;
+        $user = Auth::user();
+        $token = $user->createToken('auth-token')->plainTextToken;
+
+//        $accessToken = $user->createToken('access-token')->plainTextToken;
+//        $refreshToken = $user->createToken('refresh-token')->plainTextToken;
 
         return response()->json([
             'user' => $user,
-            'access_token' => $accessToken,
-            'refresh_token' => $refreshToken,
+            'token' => $token,
+//            'access_token' => $accessToken,
+//            'refresh_token' => $refreshToken,
         ]);
     }
 
