@@ -61,7 +61,7 @@ Route::controller(BahanController::class)->group(function () {
 
         // pivot
         Route::post('/delete-pivot', 'deletePivot');
-        // bahan lengkap 
+        // bahan lengkap
         Route::post('/pendapatan/bahan/lengkap', 'laporanPendapatanBahanLengkap');
     });
 });
@@ -86,7 +86,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 });
 Route::controller(PesananController::class)->group(function () {
-    Route::middleware(['web', 'auth:sanctum'])->group(function () {
+    Route::middleware('auth:sanctum')->group(function () {
         Route::get('/pesanan', 'index');
         Route::get('/pesanan/{id}', 'show');
         Route::put('/pesanan/{id}', 'update');
